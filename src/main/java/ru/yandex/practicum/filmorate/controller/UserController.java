@@ -34,7 +34,7 @@ public class UserController {
             throw new ValidationException("В имейле должен содержаться символ @");
         }
 
-        if (user.getLogin().isBlank()) {
+        if (user.getLogin() == null || user.getLogin().isBlank()) {
             log.warn("Попытка создания пользователя с пустым login");
             throw new ValidationException("Логин не может быть пустым");
         }
@@ -47,6 +47,11 @@ public class UserController {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.debug("name пустой, поэтому ему присваивается значение login'а");
+        }
+
+        if (user.getBirthday() == null) {
+            log.warn("Попытка с пустой датой");
+            throw new ValidationException("Дата не может быть пустой");
         }
 
         if (user.getBirthday().isAfter(LocalDate.now())) {
