@@ -25,14 +25,19 @@ public class FilmController {
 
     @PostMapping
     public Film create(@RequestBody Film film) {
-        if (film.getName().isBlank()) {
+        if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Попытка указать пустой name");
             throw new ValidationException("Название не может быть пустым");
         }
 
-        if (film.getDescription().length() > 200) {
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
             log.warn("В description больше 200 символов");
             throw new ValidationException("Описание не может быть больше 200 символов");
+        }
+
+        if (film.getReleaseDate() == null) {
+            log.warn("Пустая дата релиза");
+            throw new ValidationException("Дата релиза должна быть указана");
         }
 
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
@@ -82,6 +87,7 @@ public class FilmController {
             throw new ValidationException("Продолжительность фильма не может быть отрицательной");
         }
 
+        films.put(newFilm.getId(), newFilm);
         return newFilm;
     }
 
