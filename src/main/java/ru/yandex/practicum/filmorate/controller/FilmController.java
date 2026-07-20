@@ -30,6 +30,11 @@ public class FilmController {
             throw new ValidationException("Название не может быть пустым");
         }
 
+        if (film.getDescription() == null) {
+            log.warn("Попытка указать пустой description");
+            throw new ValidationException("Описание не может быть пустым");
+        }
+
         if (film.getDescription().length() > 200) {
             log.warn("В description больше 200 символов");
             throw new ValidationException("Описание не может быть больше 200 символов");
@@ -45,9 +50,14 @@ public class FilmController {
             throw new ValidationException("Дата релиза может быть не раньше 28 декабря 1895 года");
         }
 
-        if (film.getDuration() < 0) {
-            log.warn("Попытка указать duration меньше нуля");
-            throw new ValidationException("Продолжительность фильма не может быть отрицательной");
+        if (film.getDuration() == null) {
+            log.warn("Попытка указать пустой duration");
+            throw new ValidationException("Продолжительность должна быть указана");
+        }
+
+        if (film.getDuration() <= 0) {
+            log.warn("Попытка указать duration отрицательным, либо ноль");
+            throw new ValidationException("Продолжительность фильма должна быть больше нуля");
         }
 
         film.setId(getNextId());
@@ -67,9 +77,14 @@ public class FilmController {
             throw new ValidationException("Фильм не найден");
         }
 
-        if (newFilm.getName().isBlank()) {
+        if (newFilm.getName() == null || newFilm.getName().isBlank()) {
             log.warn("Попытка указать пустой name");
             throw new ValidationException("Название не может быть пустым");
+        }
+
+        if (newFilm.getDescription() == null) {
+            log.warn("Попытка указать пустой description");
+            throw new ValidationException("Описание не может быть пустым");
         }
 
         if (newFilm.getDescription().length() > 200) {
@@ -77,14 +92,24 @@ public class FilmController {
             throw new ValidationException("Описание не может быть больше 200 символов");
         }
 
+        if (newFilm.getReleaseDate() == null) {
+            log.warn("Пустая дата релиза");
+            throw new ValidationException("Дата релиза должна быть указана");
+        }
+
         if (newFilm.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.warn("Попытка указать releaseDate до 28.12.1895");
             throw new ValidationException("Дата релиза может быть не раньше 28 декабря 1895 года");
         }
 
-        if (newFilm.getDuration() < 0) {
-            log.warn("Попытка указать duration меньше нуля");
-            throw new ValidationException("Продолжительность фильма не может быть отрицательной");
+        if (newFilm.getDuration() == null) {
+            log.warn("Попытка указать пустой duration");
+            throw new ValidationException("Продолжительность должна быть указана");
+        }
+
+        if (newFilm.getDuration() <= 0) {
+            log.warn("Попытка указать duration отрицательным, либо ноль");
+            throw new ValidationException("Продолжительность фильма должна быть больше нуля");
         }
 
         films.put(newFilm.getId(), newFilm);

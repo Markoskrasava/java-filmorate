@@ -39,7 +39,7 @@ public class UserController {
             throw new ValidationException("Логин не может быть пустым");
         }
 
-        if (user.getLogin().trim().contains(" ")) {
+        if (user.getLogin().contains(" ")) {
             log.warn("Попытка создания login с пробелами");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
@@ -91,10 +91,10 @@ public class UserController {
             throw new ValidationException("В имейле должен содержаться символ @");
         }
 
-        if (newUser.getLogin().isBlank()) {
+        if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
             log.warn("Попытка создания пользователя с пустым login");
             throw new ValidationException("Логин не может быть пустым");
-        } else if (newUser.getLogin().trim().contains(" ")) {
+        } else if (newUser.getLogin().contains(" ")) {
             log.warn("Попытка создания login с пробелами");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
@@ -102,6 +102,11 @@ public class UserController {
         if (newUser.getName() == null || newUser.getName().isBlank()) {
             newUser.setName(newUser.getLogin());
             log.debug("name пустой, поэтому ему присваивается значение login'а");
+        }
+
+        if (newUser.getBirthday() == null) {
+            log.warn("Попытка с пустой датой");
+            throw new ValidationException("Дата не может быть пустой");
         }
 
         if (newUser.getBirthday().isAfter(LocalDate.now())) {
