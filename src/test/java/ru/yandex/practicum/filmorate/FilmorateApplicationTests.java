@@ -70,7 +70,7 @@ class FilmorateApplicationTests {
                 () -> filmController.create(film)
         );
 
-        assertEquals("Продолжительность фильма не может быть отрицательной", exception.getMessage());
+        assertEquals("Продолжительность фильма должна быть больше нуля", exception.getMessage());
     }
 
     @Test
