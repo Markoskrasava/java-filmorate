@@ -9,10 +9,14 @@ import java.util.List;
 @RequestMapping("users")
 public class FriendController {
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {}
+    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+
+    }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {}
+    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+
+    }
 
     @GetMapping("/{id}/friends")
     public List<Object> getFriends(@PathVariable Long id) {
