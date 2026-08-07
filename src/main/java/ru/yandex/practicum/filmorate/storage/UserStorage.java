@@ -25,5 +25,5 @@ public interface UserStorage {
     Collection<User> getAllGeneralFriends(Long id, Long otherId);
 
     Map<Long, User> getUsers();
-    
+
 }

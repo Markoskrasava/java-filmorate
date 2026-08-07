@@ -20,5 +20,4 @@ public interface FilmStorage {
     Film deleteLike(Long id, Long userId);
 
     Collection<Film> getMostLikebleFilms(long count);
-
 }
