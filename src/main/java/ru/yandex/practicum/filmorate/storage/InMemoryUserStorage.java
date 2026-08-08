@@ -120,7 +120,7 @@ public class InMemoryUserStorage implements UserStorage {
 
         User user = users.get(id);
         if (user == null) {
-            log.warn("Пользователь не найден");
+            log.warn("Пользователь не найден, выброшен RuntimeException");
             throw new RuntimeException("Пользователь с указанным Id не найден");
         }
         User friend = users.get(friendId);
