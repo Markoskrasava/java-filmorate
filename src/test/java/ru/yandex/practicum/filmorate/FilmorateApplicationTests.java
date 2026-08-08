@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -109,8 +110,8 @@ class FilmorateApplicationTests {
         emptyFilm.setDescription("Кристофер Нолан снял фильм о вторжении в сны");
         emptyFilm.setReleaseDate(LocalDate.of(2010, 7, 16));
         emptyFilm.setDuration(148);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> filmController.update(emptyFilm)
         );
 
@@ -224,8 +225,8 @@ class FilmorateApplicationTests {
         emptyUser.setLogin("Markoolio");
         emptyUser.setName("Марк");
         emptyUser.setBirthday(LocalDate.of(2010, 7, 16));
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> userController.update(emptyUser)
         );
 

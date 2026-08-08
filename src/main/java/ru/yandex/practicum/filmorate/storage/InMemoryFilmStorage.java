@@ -84,7 +84,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         if (!films.containsKey(newFilm.getId())) {
             log.warn("Попытка обновления несуществующего пользователя");
-            throw new NotFoundException("Пользователь не найден");
+            throw new NotFoundException("Фильм не найден");
         }
 
         if (newFilm.getName() == null || newFilm.getName().isBlank()) {
