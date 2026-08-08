@@ -29,8 +29,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addNewFriend(@PathVariable Long id, @PathVariable Long friendsId) {
-        return userService.addNewFriend(id, friendsId);
+    public User addNewFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return userService.addNewFriend(id, friendId);
     }
 
     @PostMapping

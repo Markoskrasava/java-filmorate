@@ -122,10 +122,6 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn("Пользователь не найден");
             throw new NotFoundException("Пользователь с указанным Id не найден");
         }
-        if (!users.containsKey(friendId)) {
-            log.warn("Пользователь не найден");
-            throw new NotFoundException("Пользователь с указанным Id не найден");
-        }
         User user = users.get(id);
         User friend = users.get(friendId);
         user.getFriends().remove(friendId);
@@ -172,15 +168,12 @@ public class InMemoryUserStorage implements UserStorage {
         User otherUser = users.get(otherId);
         Set<Long> userFriendsId = user.getFriends();
         Set<Long> otherUserFriendsId = otherUser.getFriends();
-        List<User> generalFriendsId = new ArrayList<>();
-        Set<User> commonIds = userFriendsId.stream()
+        Set<Long> commonIds = userFriendsId.stream()
                 .filter(otherUserFriendsId::contains)
-                .map(users::get)
                 .collect(Collectors.toSet());
-        for (User commonUser : commonIds) {
-            generalFriendsId.add(users.get(commonUser));
-        }
-        return generalFriendsId;
+        return commonIds.stream()
+                .map(users::get)
+                .collect(Collectors.toList());
     }
 
     @Override
