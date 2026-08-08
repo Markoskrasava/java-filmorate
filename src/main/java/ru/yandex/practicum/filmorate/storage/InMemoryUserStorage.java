@@ -122,6 +122,12 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn("Пользователь не найден");
             throw new NotFoundException("Пользователь с указанным Id не найден");
         }
+
+        if (!users.containsKey(friendId)) {
+            log.warn("Друг не найден");
+            throw new RuntimeException("Пользователь с указанным Id не найден");
+        }
+
         User user = users.get(id);
         User friend = users.get(friendId);
         user.getFriends().remove(friendId);
