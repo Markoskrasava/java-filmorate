@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.InternalServerErrorException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -118,11 +117,18 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn("Не введён id одного из пользователей");
             throw new ValidationException("Id должны быть указаны");
         }
-
+        if (!users.containsKey(id)) {
+            log.warn("Пользователь не найден");
+            throw new NotFoundException("Пользователь с указанным Id не найден");
+        }
+        if (!users.containsKey(friendId)) {
+            log.warn("Пользователь не найден");
+            throw new NotFoundException("Пользователь с указанным Id не найден");
+        }
         User user = users.get(id);
         if (user == null) {
             log.warn("Пользователь не найден, выброшен RuntimeException");
-            throw new InternalServerErrorException("Пользователь с указанным Id не найден");
+            throw new RuntimeException("Пользователь с указанным Id не найден");
         }
         User friend = users.get(friendId);
         user.getFriends().remove(friendId);

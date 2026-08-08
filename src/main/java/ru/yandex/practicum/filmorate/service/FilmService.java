@@ -9,7 +9,7 @@
 
     @Service
     public class FilmService {
-        private FilmStorage filmStorage;
+        private final FilmStorage filmStorage;
 
         public FilmService(FilmStorage filmStorage) {
             this.filmStorage = filmStorage;
