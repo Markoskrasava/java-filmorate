@@ -173,12 +173,12 @@ public class InMemoryUserStorage implements UserStorage {
         Set<Long> userFriendsId = user.getFriends();
         Set<Long> otherUserFriendsId = otherUser.getFriends();
         List<User> generalFriendsId = new ArrayList<>();
-        userFriendsId.stream()
+        Set<User> commonIds = userFriendsId.stream()
                 .filter(otherUserFriendsId::contains)
                 .map(users::get)
                 .collect(Collectors.toSet());
-        for (Long commonId : userFriendsId) {
-            generalFriendsId.add(users.get(commonId));
+        for (User commonUser : commonIds) {
+            generalFriendsId.add(users.get(commonUser));
         }
         return generalFriendsId;
     }
@@ -192,7 +192,7 @@ public class InMemoryUserStorage implements UserStorage {
 
         if (!users.containsKey(newUser.getId())) {
             log.warn("Попытка обновления несуществующего пользователя");
-            throw new ValidationException("Пользователь не найден");
+            throw new NotFoundException("Пользователь не найден");
         }
 
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
