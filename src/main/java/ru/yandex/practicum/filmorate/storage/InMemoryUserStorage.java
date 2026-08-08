@@ -120,7 +120,7 @@ public class InMemoryUserStorage implements UserStorage {
 
         if (!users.containsKey(id)) {
             log.warn("Пользователь не найден");
-            throw new NotFoundException("Пользователь с указанным Id не найден");
+            throw new RuntimeException("Пользователь с указанным Id не найден");
         }
 
         if (!users.containsKey(friendId)) {
