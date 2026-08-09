@@ -8,7 +8,6 @@
     import ru.yandex.practicum.filmorate.exception.ValidationException;
     import ru.yandex.practicum.filmorate.model.Film;
     import ru.yandex.practicum.filmorate.storage.FilmStorage;
-    import ru.yandex.practicum.filmorate.storage.UserStorage;
 
     import java.time.LocalDate;
     import java.util.Collection;
@@ -18,13 +17,11 @@
     @Service
     public class FilmService {
         private final FilmStorage filmStorage;
-        private final UserStorage userStorage;
         public static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
         private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
-        public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+        public FilmService(FilmStorage filmStorage) {
             this.filmStorage = filmStorage;
-            this.userStorage = userStorage;
         }
 
         public Collection<Film> findAll() {
