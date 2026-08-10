@@ -77,7 +77,7 @@ public class UserService {
         Set<Long> friendsIds = user.getFriends();
         List<User> friends = new ArrayList<>();
         for (Long friendsId : friendsIds) {
-            friends.add(userStorage.getUsers().get(friendsId));
+            friends.add(getUserById(friendsId));
         }
         return friends;
     }
@@ -145,8 +145,8 @@ public class UserService {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
 
-        for (Map.Entry<Long, User> entry : userStorage.getUsers().entrySet()) {
-            String userEmail = entry.getValue().getEmail();
+        for (User entry : userStorage.findAll()) {
+            String userEmail = entry.getEmail();
             if (userEmail.equals(user.getEmail())) {
                 log.warn("Попытка создания пользователя с email, который уже зарегестрирован");
                 throw new ValidationException("Этот имейл уже используется");
@@ -192,5 +192,18 @@ public class UserService {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
         return userStorage.update(newUser);
+    }
+
+    public void deleteUser(Long id) {
+        if (id == null) {
+            log.warn("Не введён id фильма");
+            throw new ValidationException("Id пользователя должен быть указан");
+        }
+        try {
+            userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
+        } catch (NotFoundException e) {
+            log.warn("Пользователь не найден");
+        }
+        userStorage.deleteUser(id);
     }
 }

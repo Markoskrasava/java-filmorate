@@ -8,8 +8,6 @@ import java.util.Optional;
 
 public interface FilmStorage {
 
-    Map<Long, Film> getFilms();
-
     Collection<Film> findAll();
 
     Film create(Film film);

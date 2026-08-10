@@ -7,6 +7,7 @@
     import ru.yandex.practicum.filmorate.exception.NotFoundException;
     import ru.yandex.practicum.filmorate.exception.ValidationException;
     import ru.yandex.practicum.filmorate.model.Film;
+    import ru.yandex.practicum.filmorate.model.User;
     import ru.yandex.practicum.filmorate.storage.FilmStorage;
     import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -159,7 +160,7 @@
         }
 
         public Collection<Film> getMostPopularFilms(long count) {
-            List<Film> sorted = filmStorage.getFilms().values().stream()
+            List<Film> sorted = filmStorage.findAll().stream()
                     .sorted((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()))
                     .limit(count)
                     .collect(Collectors.toList());

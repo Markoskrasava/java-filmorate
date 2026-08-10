@@ -11,11 +11,6 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
-    public Map<Long, User> getUsers() {
-        return users;
-    }
-
-    @Override
     public Collection<User> findAll() {
         return new ArrayList<>(users.values());
     }
@@ -43,6 +38,11 @@ public class InMemoryUserStorage implements UserStorage {
         temporaryUser.setEmail(newUser.getEmail());
         temporaryUser.setBirthday(newUser.getBirthday());
         return temporaryUser;
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        users.remove(id);
     }
 
     private long getNextId() {
