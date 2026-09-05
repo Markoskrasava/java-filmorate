@@ -13,5 +13,7 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
+    private Set<Genre> genre = new HashSet<>();
+    private MpaRating mpaRating;
     private Set<Long> likes = new HashSet<>();
 }
