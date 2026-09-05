@@ -5,9 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
 
@@ -21,12 +26,25 @@ class FilmorateApplicationTests {
 
     @BeforeEach
     void setUpForFilm() {
+        InMemoryUserStorage userStorage = new InMemoryUserStorage();
+        UserService userService = new UserService(userStorage);
+        userController = new UserController(userService);
+
+        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        FilmService filmService = new FilmService(filmStorage, userStorage);
+        filmController = new FilmController(filmService);
+
         film = new Film();
-        filmController = new FilmController();
         film.setName("Тестовый фильм");
         film.setDescription("Описание фильма");
         film.setReleaseDate(LocalDate.of(2024, 1, 1));
         film.setDuration(120);
+
+        user = new User();
+        user.setEmail("markbyckov8@gmail.com");
+        user.setLogin("MarkosKrasava");
+        user.setName("Марк");
+        user.setBirthday(LocalDate.of(2003, 11, 25));
     }
 
 	@Test
@@ -92,8 +110,8 @@ class FilmorateApplicationTests {
         emptyFilm.setDescription("Кристофер Нолан снял фильм о вторжении в сны");
         emptyFilm.setReleaseDate(LocalDate.of(2010, 7, 16));
         emptyFilm.setDuration(148);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> filmController.update(emptyFilm)
         );
 
@@ -102,16 +120,6 @@ class FilmorateApplicationTests {
 
     private User user;
     private UserController userController;
-
-    @BeforeEach
-    void setUpForUser() {
-        user = new User();
-        userController = new UserController();
-        user.setEmail("markbyckov8@gmail.com");
-        user.setLogin("MarkosKrasava");
-        user.setName("Марк");
-        user.setBirthday(LocalDate.of(2003, 11, 25));
-    }
 
     @Test
     void shouldReturnErrorExceptionTextWhenEmailIsEmpty() {
@@ -217,8 +225,8 @@ class FilmorateApplicationTests {
         emptyUser.setLogin("Markoolio");
         emptyUser.setName("Марк");
         emptyUser.setBirthday(LocalDate.of(2010, 7, 16));
-        ValidationException exception = assertThrows(
-                ValidationException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> userController.update(emptyUser)
         );
 
