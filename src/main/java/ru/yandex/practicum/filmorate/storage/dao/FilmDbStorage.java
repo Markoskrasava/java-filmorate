@@ -40,29 +40,53 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection
-                    .prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, film.getName());
             ps.setString(2, film.getDescription());
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
             ps.setLong(5, film.getMpaRating().getId());
-            return ps; }, keyHolder);
+            return ps;
+        }, keyHolder);
 
         Long id = keyHolder.getKeyAs(Long.class);
-
-        if (id != null) {
-            film.setId(id);
-            return film;
-        } else {
-            throw new InternalServerException("Не удалось сохранить данные");
+        if (id == null) {
+            throw new InternalServerException("Не удалось сохранить фильм");
         }
+        film.setId(id);
+
+        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+            String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+            jdbcTemplate.batchUpdate(genreSql, film.getGenre(), film.getGenre().size(),
+                    (ps, genre) -> {
+                        ps.setLong(1, id);
+                        ps.setLong(2, genre.getId());
+                    });
+        }
+        return film;
     }
 
     @Override
     public Film update(Film film) {
-        String sql = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ?";
-        jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getMpaRating().getId());
+        String sql = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_rating_id = ? WHERE id = ?";
+        jdbcTemplate.update(sql,
+                film.getName(),
+                film.getDescription(),
+                Date.valueOf(film.getReleaseDate()), // преобразование
+                film.getDuration(),
+                film.getMpaRating().getId(),
+                film.getId());
+
+        // Обновление жанров: удалить старые, вставить новые
+        jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
+        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+            String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+            jdbcTemplate.batchUpdate(genreSql, film.getGenre(), film.getGenre().size(),
+                    (ps, genre) -> {
+                        ps.setLong(1, film.getId());
+                        ps.setLong(2, genre.getId());
+                    });
+        }
         return film;
     }
 
@@ -87,11 +111,13 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
     public Collection<MpaRating> getAllMpaRatings() {
         String sql = "SELECT * FROM mpa_ratings";
         return jdbcTemplate.query(sql, mpaRatingRowMapper);
     }
 
+    @Override
     public Optional<MpaRating> getMpaRatingById(Long id) {
         String sql = "SELECT * FROM mpa_ratings WHERE id = ?";
         try {
@@ -101,11 +127,13 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
     public Collection<Genre> getAllGenre() {
         String sql = "SELECT * FROM genres";
         return jdbcTemplate.query(sql, genreRowMapper);
     }
 
+    @Override
     public Optional<Genre> getGenreById(Long id) {
         String sql = "SELECT * FROM genres WHERE id = ?";
         try {
