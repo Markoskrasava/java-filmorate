@@ -47,7 +47,7 @@ public class FilmDbStorage implements FilmStorage {
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
             ps.setLong(5, film.getMpaRating().getId());
-            return ps;}, keyHolder);
+            return ps; }, keyHolder);
 
         Long id = keyHolder.getKeyAs(Long.class);
 
