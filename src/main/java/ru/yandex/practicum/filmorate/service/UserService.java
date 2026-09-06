@@ -35,29 +35,26 @@ public class UserService {
         return userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным Id не найден"));
     }
 
-    public void addNewFriend(Long id, Long friendId) {
-        if (id == null || friendId == null) {
-            log.warn("Не введён id одного из пользователей");
+    public void addNewFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
             throw new ValidationException("Id должны быть указаны");
         }
-
-        getUserById(id);
+        getUserById(userId);
         getUserById(friendId);
-        userStorage.addFriend(id, friendId);
+        userStorage.addFriend(userId, friendId);
+        userStorage.addFriend(friendId, userId);
     }
 
-    public void deleteFriend(Long id, Long friendId) {
-        if (id == null || friendId == null) {
-            log.warn("Не введён id одного из пользователей");
+    public void deleteFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
             throw new ValidationException("Id должны быть указаны");
         }
-        User user = getUserById(id);
-        getUserById(friendId);
-        if (!user.getFriends().contains(friendId)) {
-            log.warn("Пользователь не найден, выброшен NotFoundException");
-            throw new NotFoundException("Друг с указанным Id не найден у пользователя");
+        Set<Long> userFriends = userStorage.getFriendIds(userId);
+        if (!userFriends.contains(friendId)) {
+            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
         }
-        userStorage.deleteFriend(id, friendId);
+        userStorage.deleteFriend(userId, friendId);
+        userStorage.deleteFriend(friendId, userId);
     }
 
     public Collection<User> getAllFriendsByUser(Long id) {
