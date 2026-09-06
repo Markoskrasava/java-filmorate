@@ -93,7 +93,6 @@ public class FilmDbStorage implements FilmStorage {
                 film.getId());
 
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
-        jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         if (film.getGenre() != null && !film.getGenre().isEmpty()) {
             List<Genre> distinct = film.getGenre().stream()
                     .distinct()
@@ -182,7 +181,28 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getMostPopularFilms(long count) {
-            String sql = "SELECT f.* FROM films f LEFT JOIN likes l ON f.id = l.film_id GROUP BY f.id ORDER BY COUNT(l.user_id) DESC, f.id ASC LIMIT ?";
-            return jdbcTemplate.query(sql, rowMapper, count);
+        String sql = "SELECT f.* FROM films f " +
+                "LEFT JOIN likes l ON f.id = l.film_id " +
+                "GROUP BY f.id " +
+                "ORDER BY COUNT(l.user_id) DESC, f.id ASC " +
+                "LIMIT ?";
+        List<Film> films = jdbcTemplate.query(sql, rowMapper, count);
+        for (Film film : films) {
+            film.setGenre(getGenresForFilm(film.getId()));
+            film.setLikes(getLikesForFilm(film.getId()));
+        }
+        return films;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        String sql = "MERGE INTO likes (film_id, user_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, filmId, userId);
+    }
+
+    @Override
+    public void deleteLike(Long filmId, Long userId) {
+        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+        jdbcTemplate.update(sql, filmId, userId);
     }
 }

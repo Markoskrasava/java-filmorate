@@ -28,4 +28,8 @@ public interface FilmStorage {
     Optional<Genre> getGenreById(Long id);
 
     Collection<Film> getMostPopularFilms(long count);
+
+    void addLike(Long filmId, Long userId);
+
+    void deleteLike(Long filmId, Long userId);
 }

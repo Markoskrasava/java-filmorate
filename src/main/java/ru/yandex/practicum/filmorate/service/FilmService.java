@@ -142,35 +142,21 @@
         }
 
         public void addLike(Long id, Long userId) {
-            if (id == null) {
-                log.warn("Не введён id фильма");
-                throw new ValidationException("Id фильма должен быть указан");
-            }
-            if (userId == null) {
-                log.warn("Не введён id пользователя");
-                throw new ValidationException("Id пользователя должен быть указан");
-            }
-            Film film = getFilmById(id);
+            if (id == null) throw new ValidationException("Id фильма должен быть указан");
+            if (userId == null) throw new ValidationException("Id пользователя должен быть указан");
+            getFilmById(id);
             userStorage.getUserById(userId)
                     .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-            film.getLikes().add(userId);
-            filmStorage.update(film);
+            filmStorage.addLike(id, userId);
         }
 
         public void deleteLike(Long id, Long userId) {
-            if (id == null) {
-                log.warn("Не введён id фильма");
-                throw new ValidationException("Id фильма должен быть указан");
-            }
-            if (userId == null) {
-                log.warn("Не введён id пользователя");
-                throw new ValidationException("Id пользователя должен быть указан");
-            }
-            Film film = getFilmById(id);
+            if (id == null) throw new ValidationException("Id фильма должен быть указан");
+            if (userId == null) throw new ValidationException("Id пользователя должен быть указан");
+            getFilmById(id);
             userStorage.getUserById(userId)
                     .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-            film.getLikes().remove(userId);
-            filmStorage.update(film);
+            filmStorage.deleteLike(id, userId);
         }
 
         public Collection<Film> getMostPopularFilms(long count) {
