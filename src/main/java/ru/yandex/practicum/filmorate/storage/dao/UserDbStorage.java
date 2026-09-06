@@ -84,21 +84,14 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(Long userId, Long friendId) {
-        String checkSql = "SELECT COUNT(*) FROM friends WHERE user_id = ? AND friend_id = ?";
-        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
-        if (count == 0) {
-            String sql = "INSERT INTO friends (user_id, friend_id, friends_status_id) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql, userId, friendId, 2);
-        }
+        String sql = "MERGE INTO friends (user_id, friend_id, friends_status_id) VALUES (?, ?, ?)";
+        jdbcTemplate.update(sql, userId, friendId, 2);
     }
 
     @Override
     public void deleteFriend(Long userId, Long friendId) {
         String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-        int rows = jdbcTemplate.update(sql, userId, friendId);
-        if (rows == 0) {
-            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
-        }
+        jdbcTemplate.update(sql, userId, friendId);
     }
 
     @Override

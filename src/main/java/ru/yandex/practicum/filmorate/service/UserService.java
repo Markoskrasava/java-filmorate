@@ -50,10 +50,6 @@ public class UserService {
         }
         getUserById(userId);
         getUserById(friendId);
-        Set<Long> friends = userStorage.getFriendIds(userId);
-        if (!friends.contains(friendId)) {
-            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
-        }
         userStorage.deleteFriend(userId, friendId);
     }
 
@@ -179,14 +175,10 @@ public class UserService {
 
     public void deleteUser(Long id) {
         if (id == null) {
-            log.warn("Не введён id фильма");
             throw new ValidationException("Id пользователя должен быть указан");
         }
-        try {
-            userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
+        userStorage.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
         userStorage.deleteUser(id);
     }
 }

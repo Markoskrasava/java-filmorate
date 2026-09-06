@@ -179,4 +179,10 @@ public class FilmDbStorage implements FilmStorage {
             return Optional.empty();
         }
     }
+
+    @Override
+    public Collection<Film> getMostPopularFilms(long count) {
+            String sql = "SELECT f.* FROM films f LEFT JOIN likes l ON f.id = l.film_id GROUP BY f.id ORDER BY COUNT(l.user_id) DESC, f.id ASC LIMIT ?";
+            return jdbcTemplate.query(sql, rowMapper, count);
+    }
 }

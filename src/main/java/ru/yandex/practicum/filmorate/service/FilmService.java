@@ -175,17 +175,10 @@
         }
 
         public Collection<Film> getMostPopularFilms(long count) {
-            List<Film> sorted = filmStorage.findAll().stream()
-                    .sorted((f1, f2) -> {
-                        int cmp = Integer.compare(f2.getLikes().size(), f1.getLikes().size());
-                        if (cmp == 0) {
-                            return Long.compare(f1.getId(), f2.getId());
-                        }
-                        return cmp;
-                    })
-                    .limit(count)
-                    .collect(Collectors.toList());
-            return sorted;
+            if (count < 0) {
+                throw new ValidationException("count должен быть неотрицательным");
+            }
+            return filmStorage.getMostPopularFilms(count);
         }
 
         public void deleteFilm(Long id) {

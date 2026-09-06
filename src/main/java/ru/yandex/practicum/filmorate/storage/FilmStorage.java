@@ -26,4 +26,6 @@ public interface FilmStorage {
     Collection<Genre> getAllGenre();
 
     Optional<Genre> getGenreById(Long id);
+
+    Collection<Film> getMostPopularFilms(long count);
 }
