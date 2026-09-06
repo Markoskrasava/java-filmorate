@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
+import org.junit.platform.commons.logging.Logger;
+import org.junit.platform.commons.logging.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -17,8 +21,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.MpaRatingRowMapper;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @Primary
@@ -27,6 +30,7 @@ public class FilmDbStorage implements FilmStorage {
     private final FilmRowMapper rowMapper;
     private final MpaRatingRowMapper mpaRatingRowMapper;
     private final GenreRowMapper genreRowMapper;
+    private static final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate, FilmRowMapper rowMapper, MpaRatingRowMapper mpaRatingRowMapper, GenreRowMapper genreRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
@@ -37,17 +41,38 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        if (film.getReleaseDate() == null) {
+            throw new ValidationException("Дата релиза должна быть указана");
+        }
+
+        if (film.getMpaRating() == null || film.getMpaRating().getId() == null) {
+            throw new ValidationException("Рейтинг MPA должен быть указан");
+        }
+        MpaRating mpa = getMpaRatingById(film.getMpaRating().getId())
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден"));
+        film.setMpaRating(mpa);
+
+        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+            Set<Genre> validGenres = new HashSet<>();
+            for (Genre genre : film.getGenre()) {
+                Genre found = getGenreById(genre.getId())
+                        .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
+                validGenres.add(found);
+            }
+            film.setGenre(validGenres);
+        }
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, film.getName());
-            ps.setString(2, film.getDescription());
-            ps.setDate(3, Date.valueOf(film.getReleaseDate()));
-            ps.setInt(4, film.getDuration());
-            ps.setLong(5, film.getMpaRating().getId());
-            return ps;
-        }, keyHolder);
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, film.getName());
+                ps.setString(2, film.getDescription());
+                ps.setDate(3, Date.valueOf(film.getReleaseDate()));
+                ps.setInt(4, film.getDuration());
+                ps.setLong(5, film.getMpaRating().getId());
+                return ps;
+            }, keyHolder);
 
         Long id = keyHolder.getKeyAs(Long.class);
         if (id == null) {
