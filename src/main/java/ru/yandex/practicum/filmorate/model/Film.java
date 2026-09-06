@@ -14,6 +14,7 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
+    @JsonProperty("genres")
     private Set<Genre> genre = new HashSet<>();
     @JsonProperty("mpa")
     private MpaRating mpaRating;
