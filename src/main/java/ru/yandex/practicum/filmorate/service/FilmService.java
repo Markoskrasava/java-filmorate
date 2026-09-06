@@ -179,7 +179,7 @@
                     .sorted((f1, f2) -> {
                         int cmp = Integer.compare(f2.getLikes().size(), f1.getLikes().size());
                         if (cmp == 0) {
-                            return Long.compare(f1.getId(), f2.getId()); // вторичная сортировка по id
+                            return Long.compare(f1.getId(), f2.getId());
                         }
                         return cmp;
                     })

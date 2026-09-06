@@ -50,6 +50,10 @@ public class UserService {
         }
         getUserById(userId);
         getUserById(friendId);
+        Set<Long> friends = userStorage.getFriendIds(userId);
+        if (!friends.contains(friendId)) {
+            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
+        }
         userStorage.deleteFriend(userId, friendId);
     }
 
