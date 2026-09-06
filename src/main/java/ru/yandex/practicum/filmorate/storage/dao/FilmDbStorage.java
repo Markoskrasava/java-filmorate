@@ -111,7 +111,8 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films";
         List<Film> films = jdbcTemplate.query(sql, rowMapper);
         for (Film film : films) {
-            film.setGenre(new HashSet<>(getGenresForFilm(film.getId())));
+            List<Genre> genres = getGenresForFilm(film.getId());
+            film.setGenre(new HashSet<>(genres));
         }
         return films;
     }
@@ -121,7 +122,8 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films WHERE id = ?";
         try {
             Film film = jdbcTemplate.queryForObject(sql, rowMapper, id);
-            film.setGenre(new HashSet<>(getGenresForFilm(id)));
+            List<Genre> genres = getGenresForFilm(id);
+            film.setGenre(new HashSet<>(genres));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
