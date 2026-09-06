@@ -10,11 +10,12 @@ INSERT INTO mpa_ratings (id, name) VALUES
                                        (5, 'NC-17');
 
 INSERT INTO genres (id, name) VALUES
-                                  (1, 'Comedy'),
-                                  (2, 'Drama'),
-                                  (3, 'Action'),
-                                  (4, 'Horror'),
-                                  (5, 'Sci-Fi');
+                                  (1, 'Комедия'),
+                                  (2, 'Драма'),
+                                  (3, 'Мультфильм'),
+                                  (4, 'Триллер'),
+                                  (5, 'Документальный'),
+                                  (6, 'Боевик');
 
 INSERT INTO users (email, login, name, birthday) VALUES
                                                      ('ivan@example.com', 'ivan_login', 'Ivan', '1990-05-10'),

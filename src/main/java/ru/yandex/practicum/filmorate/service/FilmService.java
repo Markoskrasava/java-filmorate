@@ -7,12 +7,16 @@
     import ru.yandex.practicum.filmorate.exception.NotFoundException;
     import ru.yandex.practicum.filmorate.exception.ValidationException;
     import ru.yandex.practicum.filmorate.model.Film;
+    import ru.yandex.practicum.filmorate.model.Genre;
+    import ru.yandex.practicum.filmorate.model.MpaRating;
     import ru.yandex.practicum.filmorate.storage.FilmStorage;
     import ru.yandex.practicum.filmorate.storage.UserStorage;
 
     import java.time.LocalDate;
     import java.util.Collection;
+    import java.util.HashSet;
     import java.util.List;
+    import java.util.Set;
     import java.util.stream.Collectors;
 
     @Service
@@ -74,6 +78,23 @@
             if (film.getDuration() <= 0) {
                 log.warn("Попытка указать duration отрицательным, либо ноль");
                 throw new ValidationException("Продолжительность фильма должна быть больше нуля");
+            }
+
+            if (film.getMpaRating() == null || film.getMpaRating().getId() == null) {
+                throw new ValidationException("Рейтинг MPA должен быть указан");
+            }
+            MpaRating mpa = filmStorage.getMpaRatingById(film.getMpaRating().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден"));
+            film.setMpaRating(mpa);
+
+            if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+                Set<Genre> validGenres = new HashSet<>();
+                for (Genre genre : film.getGenre()) {
+                    Genre found = filmStorage.getGenreById(genre.getId())
+                            .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
+                    validGenres.add(found);
+                }
+                film.setGenre(validGenres);
             }
             return filmStorage.create(film);
         }

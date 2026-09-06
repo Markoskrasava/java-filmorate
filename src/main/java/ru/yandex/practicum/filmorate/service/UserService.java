@@ -138,37 +138,46 @@ public class UserService {
             throw new ValidationException("Id должен быть указан");
         }
 
+        User existingUser = userStorage.getUserById(newUser.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + newUser.getId() + " не найден"));
+
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
-            log.warn("Попытка создания пользователя с пустым email");
+            log.warn("Попытка обновления пользователя с пустым email");
             throw new ValidationException("Имейл должен быть указан");
         } else if (!newUser.getEmail().contains("@")) {
-            log.warn("Попытка создания пользователя с email без символа @");
+            log.warn("Попытка обновления пользователя с email без символа @");
             throw new ValidationException("В имейле должен содержаться символ @");
         }
 
         if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
-            log.warn("Попытка создания пользователя с пустым login");
+            log.warn("Попытка обновления пользователя с пустым login");
             throw new ValidationException("Логин не может быть пустым");
         } else if (newUser.getLogin().contains(" ")) {
-            log.warn("Попытка создания login с пробелами");
+            log.warn("Попытка обновления login с пробелами");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
 
         if (newUser.getName() == null || newUser.getName().isBlank()) {
-            newUser.setName(newUser.getLogin());
+            existingUser.setName(newUser.getLogin());
             log.debug("name пустой, поэтому ему присваивается значение login'а");
+        } else {
+            existingUser.setName(newUser.getName());
         }
 
         if (newUser.getBirthday() == null) {
             log.warn("Попытка с пустой датой");
             throw new ValidationException("Дата не может быть пустой");
         }
-
         if (newUser.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Попытка указать birthday из будущего");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        return userStorage.update(newUser);
+
+        existingUser.setEmail(newUser.getEmail());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setBirthday(newUser.getBirthday());
+
+        return userStorage.update(existingUser);
     }
 
     public void deleteUser(Long id) {
