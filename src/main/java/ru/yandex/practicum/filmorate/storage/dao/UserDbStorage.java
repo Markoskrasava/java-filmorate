@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
@@ -94,7 +95,10 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void deleteFriend(Long userId, Long friendId) {
         String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-        jdbcTemplate.update(sql, userId, friendId);
+        int rows = jdbcTemplate.update(sql, userId, friendId);
+        if (rows == 0) {
+            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
+        }
     }
 
     @Override
