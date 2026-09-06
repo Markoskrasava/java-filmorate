@@ -13,10 +13,7 @@
     import ru.yandex.practicum.filmorate.storage.UserStorage;
 
     import java.time.LocalDate;
-    import java.util.Collection;
-    import java.util.HashSet;
-    import java.util.List;
-    import java.util.Set;
+    import java.util.*;
     import java.util.stream.Collectors;
 
     @Service
@@ -88,7 +85,7 @@
             film.setMpaRating(mpa);
 
             if (film.getGenre() != null && !film.getGenre().isEmpty()) {
-                Set<Genre> validGenres = new HashSet<>();
+                List<Genre> validGenres = new ArrayList<>();
                 for (Genre genre : film.getGenre()) {
                     Genre found = filmStorage.getGenreById(genre.getId())
                             .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));

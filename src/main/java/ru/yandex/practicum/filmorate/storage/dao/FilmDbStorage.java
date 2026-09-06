@@ -21,6 +21,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Primary
@@ -42,6 +43,13 @@ public class FilmDbStorage implements FilmStorage {
     public Film create(Film film) {
         if (film.getReleaseDate() == null) {
             throw new ValidationException("Дата релиза должна быть указана");
+        }
+
+        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+            List<Genre> distinct = film.getGenre().stream()
+                    .distinct()
+                    .collect(Collectors.toList());
+            film.setGenre(distinct);
         }
 
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
@@ -85,7 +93,12 @@ public class FilmDbStorage implements FilmStorage {
                 film.getId());
 
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
+        jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         if (film.getGenre() != null && !film.getGenre().isEmpty()) {
+            List<Genre> distinct = film.getGenre().stream()
+                    .distinct()
+                    .collect(Collectors.toList());
+            film.setGenre(distinct);
             String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
             jdbcTemplate.batchUpdate(genreSql, film.getGenre(), film.getGenre().size(),
                     (ps, genre) -> {
@@ -96,10 +109,9 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private Set<Genre> getGenresForFilm(Long filmId) {
-        String sql = "SELECT g.id, g.name FROM genres g JOIN film_genres fg ON g.id = fg.genre_id WHERE fg.film_id = ?";
-        List<Genre> list = jdbcTemplate.query(sql, genreRowMapper, filmId);
-        return new LinkedHashSet<>(list);
+    private List<Genre> getGenresForFilm(Long filmId) {
+        String sql = "SELECT g.id, g.name FROM genres g JOIN film_genres fg ON g.id = fg.genre_id WHERE fg.film_id = ? ORDER BY fg.genre_id ASC";
+        return jdbcTemplate.query(sql, genreRowMapper, filmId);
     }
 
     @Override
@@ -112,8 +124,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films";
         List<Film> films = jdbcTemplate.query(sql, rowMapper);
         for (Film film : films) {
-            Set<Genre> genres = getGenresForFilm(film.getId());
-            film.setGenre(new LinkedHashSet<>(genres));
+            film.setGenre(getGenresForFilm(film.getId()));
         }
         return films;
     }
@@ -123,8 +134,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films WHERE id = ?";
         try {
             Film film = jdbcTemplate.queryForObject(sql, rowMapper, id);
-            Set<Genre> genres = getGenresForFilm(id);
-            film.setGenre(new LinkedHashSet<>(genres));
+            film.setGenre(getGenresForFilm(id));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();

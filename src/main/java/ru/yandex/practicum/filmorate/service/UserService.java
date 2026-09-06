@@ -48,10 +48,8 @@ public class UserService {
         if (userId == null || friendId == null) {
             throw new ValidationException("Id должны быть указаны");
         }
-        Set<Long> userFriends = userStorage.getFriendIds(userId);
-        if (!userFriends.contains(friendId)) {
-            throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
-        }
+        getUserById(userId);
+        getUserById(friendId);
         userStorage.deleteFriend(userId, friendId);
     }
 
