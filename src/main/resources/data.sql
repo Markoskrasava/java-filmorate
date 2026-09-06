@@ -26,12 +26,16 @@ INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VAL
                                                                                  ('Inception', 'A thief who steals information from the subconscious during the dream state is given a task to plant an idea into the mind of a CEO.', '2010-07-16', 148, 4),
                                                                                  ('The Godfather', 'The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.', '1972-03-24', 175, 4),
                                                                                  ('La La Land', 'While navigating their careers in Los Angeles, a jazz pianist and an aspiring actress fall in love while pursuing their dreams.', '2016-12-09', 128, 2),
-                                                                                 ('Interstellar', 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity''s survival.', '2014-11-07', 169, 4);
+                                                                                 ('Interstellar', 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity''s survival.', '2014-11-07', 169, 4),
+('The Dark Knight', 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.', '2008-07-18', 152, 4);
 
 INSERT INTO film_genres (film_id, genre_id) VALUES (1, 5), (1, 3);
 INSERT INTO film_genres (film_id, genre_id) VALUES (2, 2);
 INSERT INTO film_genres (film_id, genre_id) VALUES (3, 1), (3, 2);
 INSERT INTO film_genres (film_id, genre_id) VALUES (4, 5);
+INSERT INTO film_genres (film_id, genre_id) VALUES
+                                                ((SELECT id FROM films WHERE name = 'The Dark Knight'), 2),
+                                                ((SELECT id FROM films WHERE name = 'The Dark Knight'), 4);
 
 INSERT INTO friends (user_id, friend_id, friends_status_id) VALUES (1, 2, 1);
 INSERT INTO friends (user_id, friend_id, friends_status_id) VALUES (2, 1, 1); -- двусторонняя связь
