@@ -77,7 +77,6 @@ public class FilmDbStorage implements FilmStorage {
                 film.getMpaRating().getId(),
                 film.getId());
 
-        // Обновление жанров: удалить старые, вставить новые
         jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", film.getId());
         if (film.getGenre() != null && !film.getGenre().isEmpty()) {
             String genreSql = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";

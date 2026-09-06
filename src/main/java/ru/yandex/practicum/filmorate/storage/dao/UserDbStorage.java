@@ -14,7 +14,9 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @Primary
@@ -28,11 +30,13 @@ public class UserDbStorage implements UserStorage {
     }
 
 
+    @Override
     public Collection<User> findAll() {
         String sql = "SELECT * FROM users";
         return jdbcTemplate.query(sql, rowMapper);
     }
 
+    @Override
     public User create(User user) {
         String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -55,12 +59,14 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
     public User update(User user) {
         String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
         jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), Date.valueOf(user.getBirthday()), user.getId());
         return user;
     }
 
+    @Override
     public Optional<User> getUserById(Long id) {
         String sql = "SELECT * FROM users WHERE id =?";
         try {
@@ -70,7 +76,36 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
     public void deleteUser(Long id) {
         jdbcTemplate.update("DELETE FROM users WHERE id =?", id);
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        String checkSql = "SELECT COUNT(*) FROM friends WHERE user_id = ? AND friend_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
+        if (count == 0) {
+            String sql = "INSERT INTO friends (user_id, friend_id, friends_status_id) VALUES (?, ?, ?)";
+            jdbcTemplate.update(sql, userId, friendId, 2);
+        }
+    }
+
+    @Override
+    public void deleteFriend(Long userId, Long friendId) {
+        String sql = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+        jdbcTemplate.update(sql, userId, friendId);
+    }
+
+    @Override
+    public Collection<User> getFriends(Long userId) {
+        String sql = "SELECT * FROM users u JOIN friends f on u.id = f.friends_id WHERE f.user_id = ?";
+        return jdbcTemplate.query(sql, rowMapper,userId);
+    }
+
+    @Override
+    public Set<Long> getFriendIds(Long userId) {
+        String sql = "SELECT friend_id FROM friends WHERE user_id = ?";
+        return new HashSet<>(jdbcTemplate.queryForList(sql, Long.class,userId));
     }
 }

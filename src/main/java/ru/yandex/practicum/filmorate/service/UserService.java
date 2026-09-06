@@ -41,12 +41,9 @@ public class UserService {
             throw new ValidationException("Id должны быть указаны");
         }
 
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
-        userStorage.update(user);
-        userStorage.update(friend);
+        getUserById(id);
+        getUserById(friendId);
+        userStorage.addFriend(id, friendId);
     }
 
     public void deleteFriend(Long id, Long friendId) {
@@ -55,16 +52,12 @@ public class UserService {
             throw new ValidationException("Id должны быть указаны");
         }
         User user = getUserById(id);
-        User friend = getUserById(friendId);
-        if (user == null) {
-            log.warn("Пользователь не найден, выброшен RuntimeEx" +
-                    "ception");
-            throw new RuntimeException("Пользователь с указанным Id не найден");
+        getUserById(friendId);
+        if (!user.getFriends().contains(friendId)) {
+            log.warn("Пользователь не найден, выброшен NotFoundException");
+            throw new NotFoundException("Друг с указанным Id не найден у пользователя");
         }
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
-        userStorage.update(user);
-        userStorage.update(friend);
+        userStorage.deleteFriend(id, friendId);
     }
 
     public Collection<User> getAllFriendsByUser(Long id) {
@@ -73,39 +66,23 @@ public class UserService {
             throw new ValidationException("Id пользователя должен быть указан");
         }
 
-        User user = getUserById(id);
-        Set<Long> friendsIds = user.getFriends();
-        List<User> friends = new ArrayList<>();
-        for (Long friendsId : friendsIds) {
-            friends.add(getUserById(friendsId));
-        }
-        return friends;
+        getUserById(id);
+        return userStorage.getFriends(id);
     }
 
     public Collection<User> getAllGeneralFriends(Long id, Long otherId) {
-        if (id == null || otherId == null) {
-            log.warn("Не введён id одного из пользователей");
-            throw new ValidationException("Id должны быть указаны");
-        }
-        try {
-            userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
-        try {
-            userStorage.getUserById(otherId).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
+        getUserById(id);
+        getUserById(otherId);
 
-        User user = getUserById(id);
-        User otherUser = getUserById(otherId);
-        Set<Long> userFriendsId = user.getFriends();
-        Set<Long> otherUserFriendsId = otherUser.getFriends();
-        return userFriendsId.stream()
-                .filter(otherUserFriendsId::contains)
-                .map(friendId -> userStorage.getUserById(friendId)
-                        .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден")))
+        Set<Long> userFriendIds = userStorage.getFriendIds(id);
+        Set<Long> otherFriendIds = userStorage.getFriendIds(otherId);
+
+        Set<Long> commonIds = new HashSet<>(userFriendIds);
+        commonIds.retainAll(otherFriendIds);
+
+        return commonIds.stream()
+                .map(userId -> userStorage.getUserById(userId)
+                        .orElseThrow(() -> new NotFoundException("Друг с id " + userId + " не найден")))
                 .collect(Collectors.toList());
     }
 
