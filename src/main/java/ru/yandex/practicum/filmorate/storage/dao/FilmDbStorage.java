@@ -45,23 +45,6 @@ public class FilmDbStorage implements FilmStorage {
             throw new ValidationException("Дата релиза должна быть указана");
         }
 
-        if (film.getMpaRating() == null || film.getMpaRating().getId() == null) {
-            throw new ValidationException("Рейтинг MPA должен быть указан");
-        }
-        MpaRating mpa = getMpaRatingById(film.getMpaRating().getId())
-                .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден"));
-        film.setMpaRating(mpa);
-
-        if (film.getGenre() != null && !film.getGenre().isEmpty()) {
-            Set<Genre> validGenres = new HashSet<>();
-            for (Genre genre : film.getGenre()) {
-                Genre found = getGenreById(genre.getId())
-                        .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
-                validGenres.add(found);
-            }
-            film.setGenre(validGenres);
-        }
-
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_rating_id) VALUES (?, ?, ?, ?, ?)";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
@@ -114,6 +97,11 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
+    private List<Genre> getGenresForFilm(Long filmId) {
+        String sql = "SELECT g.id, g.name FROM genres g JOIN film_genres fg ON g.id = fg.genre_id WHERE fg.film_id = ?";
+        return jdbcTemplate.query(sql, genreRowMapper, filmId);
+    }
+
     @Override
     public void deleteFilm(Long id) {
         jdbcTemplate.update("DELETE FROM films WHERE id = ?", id);
@@ -122,14 +110,20 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         String sql = "SELECT * FROM films";
-        return jdbcTemplate.query(sql, rowMapper);
+        List<Film> films = jdbcTemplate.query(sql, rowMapper);
+        for (Film film : films) {
+            film.setGenre(new HashSet<>(getGenresForFilm(film.getId())));
+        }
+        return films;
     }
 
     @Override
     public Optional<Film> getFilmById(Long id) {
         String sql = "SELECT * FROM films WHERE id = ?";
         try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject(sql, rowMapper, id));
+            Film film = jdbcTemplate.queryForObject(sql, rowMapper, id);
+            film.setGenre(new HashSet<>(getGenresForFilm(id)));
+            return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }

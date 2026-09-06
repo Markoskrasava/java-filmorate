@@ -104,11 +104,9 @@
                 log.warn("Не введён id фильма, которого нужно обновить");
                 throw new ValidationException("Id должен быть указан");
             }
-            try {
-                filmStorage.getFilmById(newFilm.getId()).orElseThrow(() -> new NotFoundException("Фильм с указанным id не найден"));
-            } catch (NotFoundException e) {
-                log.warn("Фильм не найден");
-            }
+
+            filmStorage.getFilmById(newFilm.getId())
+                    .orElseThrow(() -> new NotFoundException("Фильм с id " + newFilm.getId() + " не найден"));
 
             if (newFilm.getName() == null || newFilm.getName().isBlank()) {
                 log.warn("Попытка указать пустой name");
