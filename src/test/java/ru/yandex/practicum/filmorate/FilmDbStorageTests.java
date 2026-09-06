@@ -60,7 +60,7 @@ class FilmDbStorageTests {
     @Test
     public void testFindAll() {
         Collection<Film> films = filmStorage.findAll();
-        assertEquals(4, films.size());
+        assertEquals(5, films.size());
     }
 
     @Test
