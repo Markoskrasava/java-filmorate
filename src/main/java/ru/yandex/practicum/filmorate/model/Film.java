@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -15,7 +16,7 @@ public class Film {
     private LocalDate releaseDate;
     private Integer duration;
     @JsonProperty("genres")
-    private Set<Genre> genre = new HashSet<>();
+    private Set<Genre> genre = new LinkedHashSet<>();
     @JsonProperty("mpa")
     private MpaRating mpaRating;
     private Set<Long> likes = new HashSet<>();

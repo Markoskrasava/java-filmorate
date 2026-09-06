@@ -96,9 +96,10 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    private List<Genre> getGenresForFilm(Long filmId) {
+    private Set<Genre> getGenresForFilm(Long filmId) {
         String sql = "SELECT g.id, g.name FROM genres g JOIN film_genres fg ON g.id = fg.genre_id WHERE fg.film_id = ?";
-        return jdbcTemplate.query(sql, genreRowMapper, filmId);
+        List<Genre> list = jdbcTemplate.query(sql, genreRowMapper, filmId);
+        return new LinkedHashSet<>(list);
     }
 
     @Override
@@ -111,7 +112,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films";
         List<Film> films = jdbcTemplate.query(sql, rowMapper);
         for (Film film : films) {
-            List<Genre> genres = getGenresForFilm(film.getId());
+            Set<Genre> genres = getGenresForFilm(film.getId());
             film.setGenre(new LinkedHashSet<>(genres));
         }
         return films;
@@ -122,8 +123,8 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT * FROM films WHERE id = ?";
         try {
             Film film = jdbcTemplate.queryForObject(sql, rowMapper, id);
-            List<Genre> genres = getGenresForFilm(id);
-            film.setGenre(new HashSet<>(genres));
+            Set<Genre> genres = getGenresForFilm(id);
+            film.setGenre(new LinkedHashSet<>(genres));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();

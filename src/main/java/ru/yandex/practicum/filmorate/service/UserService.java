@@ -42,7 +42,6 @@ public class UserService {
         getUserById(userId);
         getUserById(friendId);
         userStorage.addFriend(userId, friendId);
-        userStorage.addFriend(friendId, userId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -54,7 +53,6 @@ public class UserService {
             throw new NotFoundException("Друг с id " + friendId + " не найден у пользователя " + userId);
         }
         userStorage.deleteFriend(userId, friendId);
-        userStorage.deleteFriend(friendId, userId);
     }
 
     public Collection<User> getAllFriendsByUser(Long id) {
