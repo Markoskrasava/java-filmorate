@@ -125,8 +125,14 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films = jdbcTemplate.query(sql, rowMapper);
         for (Film film : films) {
             film.setGenre(getGenresForFilm(film.getId()));
+            film.setLikes(getLikesForFilm(film.getId()));
         }
         return films;
+    }
+
+    private Set<Long> getLikesForFilm(Long filmId) {
+        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
+        return new HashSet<>(jdbcTemplate.queryForList(sql, Long.class, filmId));
     }
 
     @Override
@@ -135,6 +141,7 @@ public class FilmDbStorage implements FilmStorage {
         try {
             Film film = jdbcTemplate.queryForObject(sql, rowMapper, id);
             film.setGenre(getGenresForFilm(id));
+            film.setLikes(getLikesForFilm(id));
             return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
