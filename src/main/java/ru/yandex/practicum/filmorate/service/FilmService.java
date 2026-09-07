@@ -10,6 +10,8 @@
     import ru.yandex.practicum.filmorate.model.Genre;
     import ru.yandex.practicum.filmorate.model.MpaRating;
     import ru.yandex.practicum.filmorate.storage.FilmStorage;
+    import ru.yandex.practicum.filmorate.storage.GenreStorage;
+    import ru.yandex.practicum.filmorate.storage.MpaStorage;
     import ru.yandex.practicum.filmorate.storage.UserStorage;
 
     import java.time.LocalDate;
@@ -19,12 +21,16 @@
     public class FilmService {
         private final FilmStorage filmStorage;
         private final UserStorage userStorage;
+        private final MpaStorage mpaStorage;
+        private final GenreStorage genreStorage;
         public static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
         private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
-        public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+        public FilmService(FilmStorage filmStorage, UserStorage userStorage, MpaStorage mpaStorage, GenreStorage genreStorage) {
             this.filmStorage = filmStorage;
             this.userStorage = userStorage;
+            this.mpaStorage = mpaStorage;
+            this.genreStorage = genreStorage;
         }
 
         public Collection<Film> findAll() {
@@ -79,14 +85,14 @@
             if (film.getMpaRating() == null || film.getMpaRating().getId() == null) {
                 throw new ValidationException("Рейтинг MPA должен быть указан");
             }
-            MpaRating mpa = filmStorage.getMpaRatingById(film.getMpaRating().getId())
+            MpaRating mpa = mpaStorage.getMpaRatingById(film.getMpaRating().getId())
                     .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id " + film.getMpaRating().getId() + " не найден"));
             film.setMpaRating(mpa);
 
             if (film.getGenre() != null && !film.getGenre().isEmpty()) {
                 List<Genre> validGenres = new ArrayList<>();
                 for (Genre genre : film.getGenre()) {
-                    Genre found = filmStorage.getGenreById(genre.getId())
+                    Genre found = genreStorage.getGenreById(genre.getId())
                             .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
                     validGenres.add(found);
                 }
@@ -138,6 +144,24 @@
                 log.warn("Попытка указать duration отрицательным, либо ноль");
                 throw new ValidationException("Продолжительность фильма должна быть больше нуля");
             }
+
+            if (newFilm.getMpaRating() == null || newFilm.getMpaRating().getId() == null) {
+                throw new ValidationException("Рейтинг MPA должен быть указан");
+            }
+            MpaRating mpa = mpaStorage.getMpaRatingById(newFilm.getMpaRating().getId())
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id " + newFilm.getMpaRating().getId() + " не найден"));
+            newFilm.setMpaRating(mpa);
+
+            if (newFilm.getGenre() != null && !newFilm.getGenre().isEmpty()) {
+                List<Genre> validGenres = new ArrayList<>();
+                for (Genre genre : newFilm.getGenre()) {
+                    Genre found = genreStorage.getGenreById(genre.getId())
+                            .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
+                    validGenres.add(found);
+                }
+                newFilm.setGenre(validGenres);
+            }
+
             return filmStorage.update(newFilm);
         }
 
