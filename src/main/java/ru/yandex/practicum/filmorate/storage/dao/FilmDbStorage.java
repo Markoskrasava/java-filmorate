@@ -132,7 +132,7 @@ public class FilmDbStorage implements FilmStorage {
                 "        LEFT JOIN genres g ON fg.genre_id = g.id" +
                 "        LEFT JOIN likes l ON f.id = l.film_id" +
                 "        WHERE f.id = ?" +
-                "        ORDER BY f.id";
+                "        ORDER BY f.id";;
         Collection<Film> films = findFilmsWithDetails(sql, id);
         if (films.isEmpty()) {
             return Optional.empty();
@@ -140,23 +140,59 @@ public class FilmDbStorage implements FilmStorage {
         return films.stream().findFirst();
     }
 
-    @Override
-    public Collection<Film> getMostPopularFilms(long count) {
-        String sql = "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id," +
-        "m.name AS mpa_name, " +
-                "g.id AS genre_id, g.name AS genre_name, " +
-                "l.user_id AS like_user_id " +
-        "FROM films f " +
-        "LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id " +
-        "LEFT JOIN film_genres fg ON f.id = fg.film_id " +
-        "LEFT JOIN genres g ON fg.genre_id = g.id " +
-        "LEFT JOIN likes l ON f.id = l.film_id " +
-        "GROUP BY f.id, m.name, g.id, g.name, l.user_id " +
-        "ORDER BY COUNT(DISTINCT l.user_id) DESC, f.id ASC " +
-        "OFFSET 0 ROWS " +
-                "FETCH NEXT ? ROWS ONLY";
-        return findFilmsWithDetails(sql, count);
+        public Collection<Film> getMostPopularFilms(long count) {
+            String idSql = """
+        SELECT f.id
+        FROM films f
+        LEFT JOIN likes l ON f.id = l.film_id
+        GROUP BY f.id
+        ORDER BY COUNT(l.user_id) DESC, f.id ASC
+        LIMIT ?
+        """;
+            List<Long> filmIds = jdbcTemplate.queryForList(idSql, Long.class, count);
+
+            if (filmIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            String placeholders = filmIds.stream()
+                    .map(id -> "?")
+                    .collect(Collectors.joining(", "));
+
+            String sql = """
+        SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id,
+               m.name AS mpa_name,
+               g.id AS genre_id, g.name AS genre_name,
+               l.user_id AS like_user_id
+        FROM films f
+        LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
+        LEFT JOIN film_genres fg ON f.id = fg.film_id
+        LEFT JOIN genres g ON fg.genre_id = g.id
+        LEFT JOIN likes l ON f.id = l.film_id
+        WHERE f.id IN (%s)
+        ORDER BY (SELECT COUNT(*) FROM likes l2 WHERE l2.film_id = f.id) DESC, f.id ASC
+        """.formatted(placeholders);
+
+            return findFilmsWithDetails(sql, filmIds.toArray());
+        }
+
+
+    /* private List<Genre> getGenresForFilm(Long filmId) {
+        String sql = "SELECT g.id, g.name FROM genres g " +
+                "JOIN film_genres fg ON g.id = fg.genre_id " +
+                "WHERE fg.film_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Genre genre = new Genre();
+            genre.setId(rs.getLong("id"));
+            genre.setName(rs.getString("name"));
+            return genre;
+        }, filmId);
     }
+
+    private Set<Long> getLikesForFilm(Long filmId) {
+        String sql = "SELECT user_id FROM likes WHERE film_id = ?";
+        return new HashSet<>(jdbcTemplate.queryForList(sql, Long.class, filmId));
+    } */
 
     @Override
     public void addLike(Long filmId, Long userId) {
