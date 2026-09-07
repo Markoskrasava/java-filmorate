@@ -35,36 +35,22 @@ public class UserService {
         return userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным Id не найден"));
     }
 
-    public void addNewFriend(Long id, Long friendId) {
-        if (id == null || friendId == null) {
-            log.warn("Не введён id одного из пользователей");
+    public void addNewFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
             throw new ValidationException("Id должны быть указаны");
         }
-
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
-        userStorage.update(user);
-        userStorage.update(friend);
+        getUserById(userId);
+        getUserById(friendId);
+        userStorage.addFriend(userId, friendId);
     }
 
-    public void deleteFriend(Long id, Long friendId) {
-        if (id == null || friendId == null) {
-            log.warn("Не введён id одного из пользователей");
+    public void deleteFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
             throw new ValidationException("Id должны быть указаны");
         }
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
-        if (user == null) {
-            log.warn("Пользователь не найден, выброшен RuntimeEx" +
-                    "ception");
-            throw new RuntimeException("Пользователь с указанным Id не найден");
-        }
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
-        userStorage.update(user);
-        userStorage.update(friend);
+        getUserById(userId);
+        getUserById(friendId);
+        userStorage.deleteFriend(userId, friendId);
     }
 
     public Collection<User> getAllFriendsByUser(Long id) {
@@ -73,39 +59,23 @@ public class UserService {
             throw new ValidationException("Id пользователя должен быть указан");
         }
 
-        User user = getUserById(id);
-        Set<Long> friendsIds = user.getFriends();
-        List<User> friends = new ArrayList<>();
-        for (Long friendsId : friendsIds) {
-            friends.add(getUserById(friendsId));
-        }
-        return friends;
+        getUserById(id);
+        return userStorage.getFriends(id);
     }
 
     public Collection<User> getAllGeneralFriends(Long id, Long otherId) {
-        if (id == null || otherId == null) {
-            log.warn("Не введён id одного из пользователей");
-            throw new ValidationException("Id должны быть указаны");
-        }
-        try {
-            userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
-        try {
-            userStorage.getUserById(otherId).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
+        getUserById(id);
+        getUserById(otherId);
 
-        User user = getUserById(id);
-        User otherUser = getUserById(otherId);
-        Set<Long> userFriendsId = user.getFriends();
-        Set<Long> otherUserFriendsId = otherUser.getFriends();
-        return userFriendsId.stream()
-                .filter(otherUserFriendsId::contains)
-                .map(friendId -> userStorage.getUserById(friendId)
-                        .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден")))
+        Set<Long> userFriendIds = userStorage.getFriendIds(id);
+        Set<Long> otherFriendIds = userStorage.getFriendIds(otherId);
+
+        Set<Long> commonIds = new HashSet<>(userFriendIds);
+        commonIds.retainAll(otherFriendIds);
+
+        return commonIds.stream()
+                .map(userId -> userStorage.getUserById(userId)
+                        .orElseThrow(() -> new NotFoundException("Друг с id " + userId + " не найден")))
                 .collect(Collectors.toList());
     }
 
@@ -161,49 +131,54 @@ public class UserService {
             throw new ValidationException("Id должен быть указан");
         }
 
+        User existingUser = userStorage.getUserById(newUser.getId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + newUser.getId() + " не найден"));
+
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
-            log.warn("Попытка создания пользователя с пустым email");
+            log.warn("Попытка обновления пользователя с пустым email");
             throw new ValidationException("Имейл должен быть указан");
         } else if (!newUser.getEmail().contains("@")) {
-            log.warn("Попытка создания пользователя с email без символа @");
+            log.warn("Попытка обновления пользователя с email без символа @");
             throw new ValidationException("В имейле должен содержаться символ @");
         }
 
         if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
-            log.warn("Попытка создания пользователя с пустым login");
+            log.warn("Попытка обновления пользователя с пустым login");
             throw new ValidationException("Логин не может быть пустым");
         } else if (newUser.getLogin().contains(" ")) {
-            log.warn("Попытка создания login с пробелами");
+            log.warn("Попытка обновления login с пробелами");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
 
         if (newUser.getName() == null || newUser.getName().isBlank()) {
-            newUser.setName(newUser.getLogin());
+            existingUser.setName(newUser.getLogin());
             log.debug("name пустой, поэтому ему присваивается значение login'а");
+        } else {
+            existingUser.setName(newUser.getName());
         }
 
         if (newUser.getBirthday() == null) {
             log.warn("Попытка с пустой датой");
             throw new ValidationException("Дата не может быть пустой");
         }
-
         if (newUser.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Попытка указать birthday из будущего");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        return userStorage.update(newUser);
+
+        existingUser.setEmail(newUser.getEmail());
+        existingUser.setLogin(newUser.getLogin());
+        existingUser.setBirthday(newUser.getBirthday());
+
+        return userStorage.update(existingUser);
     }
 
     public void deleteUser(Long id) {
         if (id == null) {
-            log.warn("Не введён id фильма");
             throw new ValidationException("Id пользователя должен быть указан");
         }
-        try {
-            userStorage.getUserById(id).orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
-        } catch (NotFoundException e) {
-            log.warn("Пользователь не найден");
-        }
+        userStorage.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден"));
         userStorage.deleteUser(id);
     }
 }
