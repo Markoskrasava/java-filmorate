@@ -132,7 +132,7 @@ public class FilmDbStorage implements FilmStorage {
                 "        LEFT JOIN genres g ON fg.genre_id = g.id" +
                 "        LEFT JOIN likes l ON f.id = l.film_id" +
                 "        WHERE f.id = ?" +
-                "        ORDER BY f.id";;
+                "        ORDER BY f.id";
         Collection<Film> films = findFilmsWithDetails(sql, id);
         if (films.isEmpty()) {
             return Optional.empty();
@@ -153,7 +153,8 @@ public class FilmDbStorage implements FilmStorage {
         "LEFT JOIN likes l ON f.id = l.film_id " +
         "GROUP BY f.id, m.name, g.id, g.name, l.user_id " +
         "ORDER BY COUNT(DISTINCT l.user_id) DESC, f.id ASC " +
-        "LIMIT ?";                ;
+        "OFFSET 0 ROWS " +
+                "FETCH NEXT ? ROWS ONLY";
         return findFilmsWithDetails(sql, count);
     }
 
