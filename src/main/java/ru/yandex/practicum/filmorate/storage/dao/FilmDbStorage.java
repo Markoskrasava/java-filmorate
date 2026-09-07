@@ -131,7 +131,7 @@ public class FilmDbStorage implements FilmStorage {
                 "        LEFT JOIN film_genres fg ON f.id = fg.film_id" +
                 "        LEFT JOIN genres g ON fg.genre_id = g.id" +
                 "        LEFT JOIN likes l ON f.id = l.film_id" +
-                "        WHERE id = ?" +
+                "        WHERE f.id = ?" +
                 "        ORDER BY f.id";;
         Collection<Film> films = findFilmsWithDetails(sql, id);
         if (films.isEmpty()) {
