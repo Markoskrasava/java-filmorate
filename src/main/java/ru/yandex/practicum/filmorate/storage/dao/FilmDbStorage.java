@@ -131,6 +131,7 @@ public class FilmDbStorage implements FilmStorage {
                 "        LEFT JOIN film_genres fg ON f.id = fg.film_id" +
                 "        LEFT JOIN genres g ON fg.genre_id = g.id" +
                 "        LEFT JOIN likes l ON f.id = l.film_id" +
+                "        WHERE id = ?" +
                 "        ORDER BY f.id";;
         Collection<Film> films = findFilmsWithDetails(sql, id);
         if (films.isEmpty()) {
@@ -142,15 +143,17 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> getMostPopularFilms(long count) {
         String sql = "SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_rating_id," +
-                "m.name AS mpa_name," +
-                "               g.id AS genre_id, g.name AS genre_name," +
-                "               l.user_id AS like_user_id" +
-                "        FROM films f" +
-                "        LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id" +
-                "        LEFT JOIN film_genres fg ON f.id = fg.film_id" +
-                "        LEFT JOIN genres g ON fg.genre_id = g.id" +
-                "        LEFT JOIN likes l ON f.id = l.film_id" +
-                "        ORDER BY f.id";
+        "m.name AS mpa_name, " +
+                "g.id AS genre_id, g.name AS genre_name," +
+                "l.user_id AS like_user_id" +
+        "FROM films f" +
+        "LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id" +
+        "LEFT JOIN film_genres fg ON f.id = fg.film_id" +
+        "LEFT JOIN genres g ON fg.genre_id = g.id" +
+       " LEFT JOIN likes l ON f.id = l.film_id" +
+       " GROUP BY f.id, m.name, g.id, g.name, l.user_id" +
+       " ORDER BY COUNT(DISTINCT l.user_id) DESC, f.id ASC" +
+        "LIMIT ?";                ;
         return findFilmsWithDetails(sql, count);
     }
 
@@ -174,14 +177,12 @@ public class FilmDbStorage implements FilmStorage {
 
             Film film = filmMap.get(filmId);
             if (film == null) {
-                // RowMapper собирает базовые поля фильма
                 film = rowMapper.mapRow(rs, rs.getRow());
                 film.setGenre(new ArrayList<>());
                 film.setLikes(new HashSet<>());
                 filmMap.put(filmId, film);
             }
 
-            // Жанры и лайки добавляем вручную (их RowMapper не знает)
             Long genreId = rs.getLong("genre_id");
             if (!rs.wasNull()) {
                 boolean exists = film.getGenre().stream()
